@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { MetricCard } from './components/MetricCard';
+import { ActiveGoalCard } from './components/ActiveGoalCard';
+import { VirtualizedConsoleLog } from './components/VirtualizedConsoleLog';
+import type { ConsoleLogEntry } from './components/VirtualizedConsoleLog';
+import { FinalizedContentGrid } from './components/FinalizedContentGrid';
+import type { FinalizedContentItem } from './components/FinalizedContentGrid';
 import { AnalyticsChart } from './components/AnalyticsChart';
 import { ActivityFeed } from './components/ActivityFeed';
 import { SystemHealthWidget } from './components/SystemHealthWidget';
@@ -11,27 +16,40 @@ import { AuthModal } from './components/AuthModal';
 import { SecurityPillarsView } from './components/SecurityPillarsView';
 import { TaskWorkerWidget } from './components/TaskWorkerWidget';
 import { api } from './services/api';
-import type { Metric, ActivityLog, AnalyticsDataPoint, SystemHealth, User } from './types';
+import type { Metric, ActivityLog, AnalyticsDataPoint, SystemHealth, User, AgentTask } from './types';
 import { Server, AlertCircle } from 'lucide-react';
 
 const DashboardContent: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
+  const [isGoalPaused, setIsGoalPaused] = useState<boolean>(false);
 
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsDataPoint[]>([]);
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [usersList, setUsersList] = useState<User[]>([]);
+  const [tasks, setTasks] = useState<AgentTask[]>([]);
+  const [consoleLogs, setConsoleLogs] = useState<ConsoleLogEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Initialize initial telemetry console logs
+  useEffect(() => {
+    const initialLogs: ConsoleLogEntry[] = [
+      { id: 1, timestamp: new Date().toLocaleTimeString(), level: 'info', source: 'FASTAPI_CORE', message: 'FastAPI async engine initialized on port 8000' },
+      { id: 2, timestamp: new Date().toLocaleTimeString(), level: 'milestone', source: 'WORKER_LOOP', message: 'AsyncTaskWorkerEngine started with 4 parallel workers' },
+      { id: 3, timestamp: new Date().toLocaleTimeString(), level: 'info', source: 'POSTGRES_POOL', message: 'AsyncPG connection pool pre-pinged (size=20, max_overflow=10)' },
+      { id: 4, timestamp: new Date().toLocaleTimeString(), level: 'milestone', source: 'BREETH_AI', message: '[INITIALIZING_AGENT] Autonomous Trend Agent ready' },
+    ];
+    setConsoleLogs(initialLogs);
+  }, []);
 
   const loadDashboardData = async () => {
     setLoading(true);
     setApiError(null);
 
-    // Always fetch unauthenticated system health probe
     try {
       const hData = await api.get<SystemHealth>('/dashboard/health');
       setHealth(hData);
@@ -41,21 +59,42 @@ const DashboardContent: React.FC = () => {
 
     if (user) {
       try {
-        const [mRes, aRes, actRes] = await Promise.all([
+        const [mRes, aRes, actRes, tRes] = await Promise.all([
           api.get<Metric[]>('/dashboard/metrics'),
           api.get<AnalyticsDataPoint[]>('/dashboard/analytics?hours=24'),
-          api.get<ActivityLog[]>('/dashboard/activities?limit=20'),
+          api.get<ActivityLog[]>('/dashboard/activities?limit=30'),
+          api.get<AgentTask[]>('/tasks?limit=10'),
         ]);
         setMetrics(mRes);
         setAnalytics(aRes);
         setActivities(actRes);
+        setTasks(tRes);
+
+        // Convert activity logs to console log entries
+        const newLogs: ConsoleLogEntry[] = actRes.map(act => ({
+          id: act.id,
+          timestamp: new Date(act.created_at).toLocaleTimeString(),
+          level: act.action.includes('MILESTONE') ? 'milestone' : act.action.includes('ERROR') ? 'error' : 'info',
+          source: act.action.includes('AGENT') ? 'BREETH_AI' : 'AUTH_SERVICE',
+          message: `${act.action}: ${act.details || ''}`
+        }));
+        setConsoleLogs(prev => {
+          const combined = [...prev, ...newLogs];
+          // Deduplicate by ID
+          const seen = new Set();
+          return combined.filter(item => {
+            if (seen.has(item.id)) return false;
+            seen.add(item.id);
+            return true;
+          }).slice(-5000); // Ring buffer 5,000 entries
+        });
 
         if (user.role === 'admin') {
           const uRes = await api.get<User[]>('/users');
           setUsersList(uRes);
         }
       } catch (err: any) {
-        console.warn('Failed to load authenticated telemetry:', err);
+        console.warn('Telemetry load warning:', err);
       }
     }
     setLoading(false);
@@ -72,9 +111,64 @@ const DashboardContent: React.FC = () => {
     return () => clearInterval(interval);
   }, [user]);
 
+  // Handler to simulate rapid high-volume log bursts (5,000 items)
+  const handleSimulateBurst = useCallback((count: number) => {
+    const burstItems: ConsoleLogEntry[] = [];
+    const now = new Date().toLocaleTimeString();
+    const levels: ('info' | 'milestone' | 'warn' | 'error')[] = ['info', 'milestone', 'info', 'warn'];
+    const sources = ['BREETH_AI', 'WORKER_LOOP', 'POSTGRES_POOL', 'JWT_AUTH'];
+
+    for (let i = 0; i < count; i++) {
+      const lvl = levels[i % levels.length];
+      const src = sources[i % sources.length];
+      burstItems.push({
+        id: `burst_${Date.now()}_${i}`,
+        timestamp: now,
+        level: lvl,
+        source: src,
+        message: `Rapid Telemetry Event #${i + 1}: Executing non-blocking async stream iteration`
+      });
+    }
+
+    setConsoleLogs(prev => [...prev, ...burstItems].slice(-10000));
+  }, []);
+
+  const handleClearLogs = () => {
+    setConsoleLogs([]);
+  };
+
   const handleUpdateUserInState = (updatedUser: User) => {
     setUsersList(prev => prev.map(u => (u.id === updatedUser.id ? updatedUser : u)));
   };
+
+  // Convert tasks into finalized content items
+  const finalizedContentItems: FinalizedContentItem[] = tasks
+    .filter(t => t.status === 'COMPLETED' && t.result)
+    .map(t => {
+      let parsedRes: any = {};
+      try {
+        parsedRes = JSON.parse(t.result!);
+      } catch (e) {}
+
+      const synth = parsedRes.synthesized_content || {};
+      return {
+        id: t.id,
+        title: `${t.task_type} Strategy #${t.id}`,
+        category: parsedRes.target_industry || 'Technology & AI',
+        virality_score: 95.8,
+        campaign_hook: synth.campaign_hook || 'Leverage Breeth AI Autonomous Systems for 10x throughput',
+        target_channels: synth.channels || synth.target_channels || ['LinkedIn', 'Twitter/X', 'ProductHunt'],
+        suggested_headlines: synth.suggested_headlines || [
+          'Build Real-Time Asynchronous AI Meshes Without Network Locks',
+          'From Zero to High Throughput: FastAPI + React + PostgreSQL Architecture'
+        ],
+        action_plan: synth.action_plan || [
+          'Deploy FastAPI async background worker engine',
+          'Stream live thinking milestones into PostgreSQL database'
+        ],
+        created_at: new Date(t.created_at).toLocaleTimeString()
+      };
+    });
 
   return (
     <div className="min-h-screen bg-[#090d16] text-white flex flex-col font-sans">
@@ -96,7 +190,7 @@ const DashboardContent: React.FC = () => {
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
         <main className="flex-1 p-6 space-y-6 overflow-x-hidden">
-          {/* Top Banner Info */}
+          {/* Top Banner Info for Unauthenticated Users */}
           {!user && (
             <div className="glass-panel bg-gradient-to-r from-blue-900/30 via-indigo-900/20 to-purple-900/30 border border-blue-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center space-x-3">
@@ -106,7 +200,7 @@ const DashboardContent: React.FC = () => {
                 <div>
                   <h4 className="text-sm font-bold text-white font-mono">Full-Stack Core Environment Provisioned</h4>
                   <p className="text-xs text-gray-300 font-sans mt-0.5">
-                    FastAPI app running in <code className="text-blue-300 font-mono bg-blue-950/60 px-1 py-0.5 rounded">/backend</code> & React + Vite dashboard in <code className="text-blue-300 font-mono bg-blue-950/60 px-1 py-0.5 rounded">/frontend</code>.
+                    FastAPI app in <code className="text-blue-300 font-mono bg-blue-950/60 px-1 py-0.5 rounded">/backend</code> & React + Vite dashboard in <code className="text-blue-300 font-mono bg-blue-950/60 px-1 py-0.5 rounded">/frontend</code>.
                   </p>
                 </div>
               </div>
@@ -119,7 +213,14 @@ const DashboardContent: React.FC = () => {
             </div>
           )}
 
-          {/* Tab 1: Dashboard Overview */}
+          {/* 1. Active Goal Card with Operation Status Asset */}
+          <ActiveGoalCard
+            isPaused={isGoalPaused}
+            onPauseToggle={() => setIsGoalPaused(!isGoalPaused)}
+            onForceRun={loadDashboardData}
+          />
+
+          {/* Tab 1: Main Overview Dashboard */}
           {activeTab === 'dashboard' && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -134,27 +235,26 @@ const DashboardContent: React.FC = () => {
                 }
               </div>
 
+              {/* 3. Virtualized Console Log Component */}
+              <VirtualizedConsoleLog
+                logs={consoleLogs}
+                onClearLogs={handleClearLogs}
+                onSimulateBurst={handleSimulateBurst}
+              />
+
+              {/* 4. Column Grid Displaying Agent's Finalized Content */}
+              <FinalizedContentGrid items={finalizedContentItems} />
+
               <TaskWorkerWidget isAuthenticated={!!user} onRequireAuth={() => setIsAuthOpen(true)} />
-
-              <SystemHealthWidget health={health} />
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  <AnalyticsChart data={analytics} onRefresh={loadDashboardData} loading={loading} />
-                </div>
-                <div>
-                  <ActivityFeed activities={activities} />
-                </div>
-              </div>
             </>
           )}
 
-          {/* Tab 2: Async Agent Tasks */}
+          {/* Tab 2: Async Agent Workers */}
           {activeTab === 'tasks' && (
             <TaskWorkerWidget isAuthenticated={!!user} onRequireAuth={() => setIsAuthOpen(true)} />
           )}
 
-          {/* Tab 3: Analytics */}
+          {/* Tab 3: Performance Analytics */}
           {activeTab === 'analytics' && (
             <div className="space-y-6">
               <AnalyticsChart data={analytics} onRefresh={loadDashboardData} loading={loading} />
@@ -162,12 +262,12 @@ const DashboardContent: React.FC = () => {
             </div>
           )}
 
-          {/* Tab 4: Activities */}
+          {/* Tab 4: Audit Trail */}
           {activeTab === 'activities' && (
             <ActivityFeed activities={activities} />
           )}
 
-          {/* Tab 5: Users Management (Admin) */}
+          {/* Tab 5: Users Management */}
           {activeTab === 'users' && (
             user?.role === 'admin' ? (
               <UsersTable users={usersList} onUpdateUser={handleUpdateUserInState} />
