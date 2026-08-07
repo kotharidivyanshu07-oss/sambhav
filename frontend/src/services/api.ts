@@ -117,6 +117,13 @@ class ApiClient {
   public delete<T>(endpoint: string) {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
+
+  public createSseEventSource(endpoint: string): EventSource | null {
+    const token = this.getAccessToken();
+    if (!token) return null;
+    const url = `${API_BASE_URL}${endpoint}?token=${encodeURIComponent(token)}`;
+    return new EventSource(url);
+  }
 }
 
 export const api = new ApiClient();

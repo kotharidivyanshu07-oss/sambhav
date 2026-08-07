@@ -111,6 +111,38 @@ const DashboardContent: React.FC = () => {
     return () => clearInterval(interval);
   }, [user]);
 
+  // Connect Optimized Server-Sent Events (SSE) Stream when authenticated
+  useEffect(() => {
+    if (!user) return;
+
+    const sse = api.createSseEventSource('/stream/telemetry');
+    if (!sse) return;
+
+    sse.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.type === 'log_entry' && payload.log) {
+          const newEntry: ConsoleLogEntry = payload.log;
+          setConsoleLogs(prev => {
+            if (prev.some(l => l.id === newEntry.id)) return prev;
+            return [...prev, newEntry].slice(-5000);
+          });
+        }
+      } catch (err) {
+        // ignore non-json SSE frames
+      }
+    };
+
+    sse.onerror = (err) => {
+      console.warn('SSE stream notice, gracefully falling back to background polling:', err);
+      sse.close();
+    };
+
+    return () => {
+      sse.close();
+    };
+  }, [user]);
+
   // Handler to simulate rapid high-volume log bursts (5,000 items)
   const handleSimulateBurst = useCallback((count: number) => {
     const burstItems: ConsoleLogEntry[] = [];
