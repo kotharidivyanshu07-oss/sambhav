@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # AI Provider API Keys
+    AI_PROVIDER: str = "auto"  # auto, breeth, gemini
+    BREETH_API_KEY: str = ""
+    BREETH_API_URL: str = "https://api.breeth.ai/v1/chat/completions"
+    GEMINI_API_KEY: str = ""
+
     # CORS Origins (Comma-separated string or list)
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000"
 
