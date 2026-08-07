@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Activity, ActivityIcon, Users, Shield, Zap, Lock } from 'lucide-react';
+import { LayoutDashboard, Activity, Cpu, ActivityIcon, Users, Shield, Zap, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
@@ -12,6 +12,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
 
   const navItems = [
     { id: 'dashboard', label: 'Main Overview', icon: LayoutDashboard, badge: null },
+    { id: 'tasks', label: 'Async Agent Workers', icon: Cpu, badge: 'Async' },
     { id: 'analytics', label: 'Async Performance', icon: Activity, badge: 'Live' },
     { id: 'activities', label: 'Audit Trail', icon: ActivityIcon, badge: null },
     { id: 'users', label: 'Role & User Access', icon: Users, requiresAdmin: true, badge: user?.role === 'admin' ? 'Admin' : 'Protected' },

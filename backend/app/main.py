@@ -14,6 +14,9 @@ from app.models.user import User, Metric
 from sqlalchemy import select, func
 
 
+from app.core.worker import task_worker
+
+
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan context for startup initialization and seeding."""
@@ -46,8 +49,13 @@ async def lifespan(app: FastAPI):
             session.add_all(initial_metrics)
             await session.commit()
 
+    # 3. Start Async Task Worker Engine background loops
+    await task_worker.start()
+
     yield
-    # Cleanup tasks on shutdown (if any)
+
+    # Cleanup tasks on shutdown
+    await task_worker.stop()
 
 
 app = FastAPI(

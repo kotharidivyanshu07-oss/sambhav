@@ -54,3 +54,28 @@ export interface SystemHealth {
   event_loop_lag_ms: number;
   db_status: string;
 }
+
+export interface AgentTask {
+  id: number;
+  task_type: string;
+  payload: string;
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  priority: number;
+  result?: string;
+  error_message?: string;
+  execution_time_ms: number;
+  user_id: number;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+}
+
+export interface WorkerStats {
+  is_running: boolean;
+  active_workers: number;
+  queue_depth: number;
+  processed_total: number;
+  failed_total: number;
+  avg_processing_time_ms: number;
+  loop_status: string;
+}

@@ -9,6 +9,7 @@ import { SystemHealthWidget } from './components/SystemHealthWidget';
 import { UsersTable } from './components/UsersTable';
 import { AuthModal } from './components/AuthModal';
 import { SecurityPillarsView } from './components/SecurityPillarsView';
+import { TaskWorkerWidget } from './components/TaskWorkerWidget';
 import { api } from './services/api';
 import type { Metric, ActivityLog, AnalyticsDataPoint, SystemHealth, User } from './types';
 import { Server, AlertCircle } from 'lucide-react';
@@ -133,6 +134,8 @@ const DashboardContent: React.FC = () => {
                 }
               </div>
 
+              <TaskWorkerWidget isAuthenticated={!!user} onRequireAuth={() => setIsAuthOpen(true)} />
+
               <SystemHealthWidget health={health} />
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -146,7 +149,12 @@ const DashboardContent: React.FC = () => {
             </>
           )}
 
-          {/* Tab 2: Analytics */}
+          {/* Tab 2: Async Agent Tasks */}
+          {activeTab === 'tasks' && (
+            <TaskWorkerWidget isAuthenticated={!!user} onRequireAuth={() => setIsAuthOpen(true)} />
+          )}
+
+          {/* Tab 3: Analytics */}
           {activeTab === 'analytics' && (
             <div className="space-y-6">
               <AnalyticsChart data={analytics} onRefresh={loadDashboardData} loading={loading} />
@@ -154,12 +162,12 @@ const DashboardContent: React.FC = () => {
             </div>
           )}
 
-          {/* Tab 3: Activities */}
+          {/* Tab 4: Activities */}
           {activeTab === 'activities' && (
             <ActivityFeed activities={activities} />
           )}
 
-          {/* Tab 4: Users Management (Admin) */}
+          {/* Tab 5: Users Management (Admin) */}
           {activeTab === 'users' && (
             user?.role === 'admin' ? (
               <UsersTable users={usersList} onUpdateUser={handleUpdateUserInState} />
@@ -179,7 +187,7 @@ const DashboardContent: React.FC = () => {
             )
           )}
 
-          {/* Tab 5: Security Pillars */}
+          {/* Tab 6: Security Pillars */}
           {activeTab === 'security' && (
             <SecurityPillarsView />
           )}
