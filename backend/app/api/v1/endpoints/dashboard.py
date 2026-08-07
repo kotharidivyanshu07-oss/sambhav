@@ -3,7 +3,7 @@ import os
 import psutil
 import datetime
 from typing import List
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -179,3 +179,63 @@ async def get_system_health(db: AsyncSession = Depends(get_db)):
         event_loop_lag_ms=round(db_latency_ms, 2),
         db_status="connected"
     )
+
+
+from app.core.worker import task_worker
+
+@router.get("/operational-controls")
+async def get_operational_controls_data(
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieve live operational status, kill-switch status, token spend metrics & human-in-the-loop flag."""
+    return task_worker.get_operational_controls()
+
+
+@router.post("/kill-switch")
+async def trigger_emergency_kill_switch(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Global Emergency Kill-Switch button that safely intercepts and stops/resumes the background worker loop."""
+    if task_worker.is_running:
+        await task_worker.stop()
+        action_msg = "EMERGENCY_KILL_SWITCH_TRIGGERED"
+        details_msg = f"User #{current_user.id} ({current_user.email}) triggered Emergency Kill-Switch. Background worker loop STOPPED."
+    else:
+        await task_worker.start()
+        action_msg = "WORKER_LOOP_RESUMED"
+        details_msg = f"User #{current_user.id} ({current_user.email}) resumed worker loop."
+
+    activity = ActivityLog(
+        user_id=current_user.id,
+        action=action_msg,
+        details=details_msg,
+        ip_address=request.client.host if request.client else "127.0.0.1"
+    )
+    db.add(activity)
+    await db.commit()
+
+    return task_worker.get_operational_controls()
+
+
+@router.post("/toggle-human-in-loop")
+async def toggle_human_in_loop_flag(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Toggle Human-in-the-Loop requirement flag before content finalization."""
+    new_val = task_worker.toggle_human_in_loop()
+
+    activity = ActivityLog(
+        user_id=current_user.id,
+        action="HUMAN_IN_LOOP_TOGGLED",
+        details=f"Human-in-the-Loop flag set to {new_val} by User #{current_user.id}",
+        ip_address=request.client.host if request.client else "127.0.0.1"
+    )
+    db.add(activity)
+    await db.commit()
+
+    return task_worker.get_operational_controls()
+

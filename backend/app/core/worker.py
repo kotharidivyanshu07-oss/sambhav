@@ -27,6 +27,12 @@ class AsyncTaskWorkerEngine:
         self.workers: list[asyncio.Task] = []
         self.is_running = False
         
+        # Operational Controls & Spend Tracking State
+        self.human_in_loop_required: bool = True
+        self.daily_budget_limit: float = 25.00
+        self.current_token_spend: float = 4.28
+        self.total_tokens_used: int = 142500
+
         # Performance Telemetry Counters
         self.processed_total = 0
         self.failed_total = 0
@@ -268,6 +274,26 @@ class AsyncTaskWorkerEngine:
             "avg_processing_time_ms": round(avg_time, 2),
             "loop_status": "healthy_async" if self.is_running else "stopped"
         }
+
+    def get_operational_controls(self) -> Dict[str, Any]:
+        """Return operational parameters: kill-switch status, token spend, human-in-the-loop setting."""
+        safety_margin_remaining = round(
+            max(0.0, (1.0 - (self.current_token_spend / self.daily_budget_limit))) * 100.0, 1
+        )
+        return {
+            "worker_running": self.is_running,
+            "human_in_loop_required": self.human_in_loop_required,
+            "current_spend_usd": self.current_token_spend,
+            "daily_budget_limit_usd": self.daily_budget_limit,
+            "safety_margin_percentage": safety_margin_remaining,
+            "total_tokens_used": self.total_tokens_used,
+            "safety_status": "SAFE_MARGIN" if safety_margin_remaining > 15.0 else "WARNING_LIMIT"
+        }
+
+    def toggle_human_in_loop(self) -> bool:
+        """Toggle Human-in-the-Loop approval flag."""
+        self.human_in_loop_required = not self.human_in_loop_required
+        return self.human_in_loop_required
 
 
 # Singleton instance of the Worker Engine

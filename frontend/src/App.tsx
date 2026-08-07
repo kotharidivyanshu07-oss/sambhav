@@ -15,6 +15,8 @@ import { UsersTable } from './components/UsersTable';
 import { AuthModal } from './components/AuthModal';
 import { SecurityPillarsView } from './components/SecurityPillarsView';
 import { TaskWorkerWidget } from './components/TaskWorkerWidget';
+import { OperationalControlsCard } from './components/OperationalControlsCard';
+import type { OperationalControlsData } from './components/OperationalControlsCard';
 import { api } from './services/api';
 import type { Metric, ActivityLog, AnalyticsDataPoint, SystemHealth, User, AgentTask } from './types';
 import { Server, AlertCircle } from 'lucide-react';
@@ -32,6 +34,7 @@ const DashboardContent: React.FC = () => {
   const [usersList, setUsersList] = useState<User[]>([]);
   const [tasks, setTasks] = useState<AgentTask[]>([]);
   const [consoleLogs, setConsoleLogs] = useState<ConsoleLogEntry[]>([]);
+  const [operationalControls, setOperationalControls] = useState<OperationalControlsData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -59,16 +62,18 @@ const DashboardContent: React.FC = () => {
 
     if (user) {
       try {
-        const [mRes, aRes, actRes, tRes] = await Promise.all([
+        const [mRes, aRes, actRes, tRes, ctrlRes] = await Promise.all([
           api.get<Metric[]>('/dashboard/metrics'),
           api.get<AnalyticsDataPoint[]>('/dashboard/analytics?hours=24'),
           api.get<ActivityLog[]>('/dashboard/activities?limit=30'),
           api.get<AgentTask[]>('/tasks?limit=10'),
+          api.get<OperationalControlsData>('/dashboard/operational-controls').catch(() => null),
         ]);
         setMetrics(mRes);
         setAnalytics(aRes);
         setActivities(actRes);
         setTasks(tRes);
+        if (ctrlRes) setOperationalControls(ctrlRes);
 
         // Convert activity logs to console log entries
         const newLogs: ConsoleLogEntry[] = actRes.map(act => ({
@@ -142,6 +147,25 @@ const DashboardContent: React.FC = () => {
       sse.close();
     };
   }, [user]);
+
+  const handleTriggerKillSwitch = async () => {
+    try {
+      const res = await api.post<OperationalControlsData>('/dashboard/kill-switch');
+      setOperationalControls(res);
+      loadDashboardData();
+    } catch (err: any) {
+      console.warn('Kill switch action warning:', err);
+    }
+  };
+
+  const handleToggleHumanInLoop = async () => {
+    try {
+      const res = await api.post<OperationalControlsData>('/dashboard/toggle-human-in-loop');
+      setOperationalControls(res);
+    } catch (err: any) {
+      console.warn('Toggle human-in-loop warning:', err);
+    }
+  };
 
   // Handler to simulate rapid high-volume log bursts (5,000 items)
   const handleSimulateBurst = useCallback((count: number) => {
@@ -250,6 +274,14 @@ const DashboardContent: React.FC = () => {
             isPaused={isGoalPaused}
             onPauseToggle={() => setIsGoalPaused(!isGoalPaused)}
             onForceRun={loadDashboardData}
+          />
+
+          {/* Operational Controls Component Card */}
+          <OperationalControlsCard
+            data={operationalControls}
+            onTriggerKillSwitch={handleTriggerKillSwitch}
+            onToggleHumanInLoop={handleToggleHumanInLoop}
+            loading={loading}
           />
 
           {/* Tab 1: Main Overview Dashboard */}
