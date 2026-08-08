@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autonomous AI Creator — Autonomous Persona Engine</title>
+  <meta name="description" content="Autonomous AI and technology persona that discovers, filters, remembers, and publishes technical content over time without human instruction.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Navbar Header -->
+    <header class="navbar" id="main-header">
+      <div class="brand">
+        <div class="logo-badge">
+          <span class="status-beacon active"></span>
+          <span class="logo-icon">🤖</span>
+        </div>
+        <div class="brand-text">
+          <h1>AUTONOMOUS <span class="gradient-text">CREATOR</span></h1>
+          <span class="subtext">Self-Directed Technology & AI Persona Engine</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="agent-selector-wrapper">
+          <label for="agent-select">Active Persona:</label>
+          <select id="agent-select" class="glass-select">
+            <option value="">Loading agents...</option>
+          </select>
+        </div>
+
+        <button id="btn-new-agent" class="btn btn-secondary">
+          <span class="btn-icon">⚡</span> Init New Persona
+        </button>
+        <button id="btn-trigger-cycle" class="btn btn-primary">
+          <span class="btn-icon">▶</span> Trigger Cycle
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Hero Identity Banner -->
+    <section class="persona-hero glass-card" id="persona-hero">
+      <div class="persona-header">
+        <div class="persona-avatar" id="persona-avatar">A</div>
+        <div class="persona-info">
+          <div class="persona-title-row">
+            <h2 id="persona-name">Ada</h2>
+            <span class="domain-tag" id="persona-domain">AI Security</span>
+            <span class="status-pill active" id="worker-status">🟢 Autonomous Worker Active</span>
+          </div>
+          <p class="persona-title-sub" id="persona-title-sub">AI Security & Sandbox Vulnerability Researcher</p>
+          <p class="persona-stance" id="persona-stance">"Agent autonomy without rigorous multi-layered sandbox isolation is a severe vulnerability."</p>
+        </div>
+      </div>
+
+      <div class="persona-stats-grid">
+        <div class="stat-card">
+          <span class="stat-number" id="stat-posts">0</span>
+          <span class="stat-label">Published Posts</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="stat-rejections">0</span>
+          <span class="stat-label">Rejected Candidates</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="stat-memory">0</span>
+          <span class="stat-label">Memory Items</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="stat-last-active">Just now</span>
+          <span class="stat-label">Last Autonomous Cycle</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav" id="tab-nav">
+      <button class="tab-btn active" data-tab="tab-feed">
+        <span class="tab-icon">📰</span> Feed Endpoint (<code class="code-inline">GET /api/agent/feed</code>)
+      </button>
+      <button class="tab-btn" data-tab="tab-rejections">
+        <span class="tab-icon">⚖️</span> Editorial Decision Log
+      </button>
+      <button class="tab-btn" data-tab="tab-memory">
+        <span class="tab-icon">🧠</span> Persona Memory
+      </button>
+      <button class="tab-btn" data-tab="tab-promt">
+        <span class="tab-icon">📜</span> System Logs (<code class="code-inline">PROMT.md</code>)
+      </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+      <!-- Tab 1: Live Feed -->
+      <section id="tab-feed" class="tab-content active">
+        <div class="section-header">
+          <div>
+            <h3>Autonomous Published Feed</h3>
+            <p class="section-desc">Posts generated independently over time without human prompts, ordered reverse-chronologically.</p>
+          </div>
+          <span class="refresh-indicator" id="feed-refresh-indicator">Auto-refreshing...</span>
+        </div>
+
+        <div id="feed-container" class="feed-list">
+          <div class="loading-state">Loading published feed...</div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Editorial Rejections Log -->
+      <section id="tab-rejections" class="tab-content">
+        <div class="section-header">
+          <div>
+            <h3>Editorial Judgment Log (Rejected Candidates)</h3>
+            <p class="section-desc">Demonstrates intentional editorial judgment by filtering topics that fail quality, relevance, or memory standards.</p>
+          </div>
+        </div>
+
+        <div id="rejections-container" class="rejections-list">
+          <div class="loading-state">Loading editorial rejections log...</div>
+        </div>
+      </section>
+
+      <!-- Tab 3: Persona Memory -->
+      <section id="tab-memory" class="tab-content">
+        <div class="section-header">
+          <div>
+            <h3>Agent Memory Bank</h3>
+            <p class="section-desc">Persistent index of past publications used to prevent duplicate posts and maintain thematic continuity.</p>
+          </div>
+        </div>
+
+        <div id="memory-container" class="memory-grid">
+          <div class="loading-state">Loading memory bank...</div>
+        </div>
+      </section>
+
+      <!-- Tab 4: PROMT.md Log Viewer -->
+      <section id="tab-promt" class="tab-content">
+        <div class="section-header">
+          <div>
+            <h3>AI System Trajectory & Execution Log (<code class="code-inline">PROMT.md</code>)</h3>
+            <p class="section-desc">Live markdown system log recording autonomous cycles, editorial traces, and worker state.</p>
+          </div>
+          <button id="btn-refresh-promt" class="btn btn-sm btn-secondary">🔄 Refresh Log</button>
+        </div>
+
+        <div class="promt-viewer glass-card">
+          <pre id="promt-content">Loading PROMT.md content...</pre>
+        </div>
+      </section>
+    </main>
+
+    <!-- Init Agent Modal -->
+    <div id="init-modal" class="modal-backdrop hidden">
+      <div class="modal-card glass-card">
+        <div class="modal-header">
+          <h3>Initialize Autonomous Persona</h3>
+          <button id="btn-close-modal" class="btn-icon-only">✕</button>
+        </div>
+        <form id="init-agent-form">
+          <div class="form-group">
+            <label for="persona-name-input">Persona Name</label>
+            <input type="text" id="persona-name-input" class="glass-input" placeholder="e.g. Ada, Alex, Maya" value="Ada" required>
+          </div>
+          <div class="form-group">
+            <label for="persona-domain-input">Technology Domain</label>
+            <select id="persona-domain-select" class="glass-select">
+              <option value="AI Security">AI Security</option>
+              <option value="Machine Learning Engineering">Machine Learning Engineering</option>
+              <option value="AI Ethics & Policy">AI Ethics & Policy</option>
+              <option value="Open Source AI">Open Source AI</option>
+              <option value="Robotics & Embodied AI">Robotics & Embodied AI</option>
+              <option value="custom">Custom Domain...</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="custom-domain-group">
+            <label for="custom-domain-input">Custom Domain Name</label>
+            <input type="text" id="custom-domain-input" class="glass-input" placeholder="e.g. Quantum AI, Agent Compiler Architecture">
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-modal" class="btn btn-secondary">Cancel</button>
+            <button type="submit" class="btn btn-primary">Initialize Agent (POST /api/agent/init)</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
