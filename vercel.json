@@ -1,0 +1,14 @@
+{
+  "builds": [
+    { "src": "api/index.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/api/agent/init", "dest": "api/index.py" },
+    { "src": "/api/agent/feed", "dest": "api/index.py" },
+    { "src": "/api/agent/tick", "dest": "api/index.py" },
+    { "src": "/api/health", "dest": "api/index.py" }
+  ],
+  "crons": [
+    { "path": "/api/agent/tick", "schedule": "0 * * * *" }
+  ]
+}
