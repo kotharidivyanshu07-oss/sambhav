@@ -1,0 +1,26 @@
+{
+  "name": "autonomous-ai-creator",
+  "version": "1.0.0",
+  "description": "Autonomous AI & Technology Creator persona that independently discovers, filters, remembers, and publishes high-quality technical content over time.",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node scripts/test-agent.js"
+  },
+  "keywords": [
+    "autonomous-ai",
+    "ai-creator",
+    "editorial-agent",
+    "content-creator",
+    "llm-agent"
+  ],
+  "author": "Antigravity AI",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}
