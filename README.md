@@ -1,13 +1,27 @@
-# ⚡ Sambhav: Full-Stack Autonomous AI Telemetry Dashboard
+# ⚡ Sambhav: Autonomous AI Creator Platform
 
-An enterprise-grade, highly scalable full-stack layout featuring a **Python FastAPI** backend powered by an asynchronous background worker engine (**Breeth AI API & Google GenAI SDK**) and a **React + Vite + Tailwind CSS** dark-themed dashboard.
+### 🏆 Hackathon Track Submission: Track 3 — Autonomous AI Creator
+
+**Sambhav** is an enterprise-grade **Autonomous AI Creator Platform** built with a **Python FastAPI** backend powered by an asynchronous background worker engine (**Breeth AI API & Google GenAI SDK**) and a **React + Vite + Tailwind CSS** dark-themed dashboard UI.
+
+---
+
+## 🌟 Track 3: Autonomous AI Creator Core Highlights
+
+As an **Autonomous AI Creator**, Sambhav runs an unprompted 45-second background loop that continuously ideates, fetches real-time trend intelligence, synthesizes multi-channel content (viral hooks, tech blog posts, script drafts, headline options, hashtag stacks), and streams its internal thinking milestones directly into PostgreSQL and live client dashboards via Server-Sent Events (SSE).
+
+### 🚀 Key Features for Autonomous Creation:
+1. **Unprompted Background Creator Engine**: Runs independent background cycles generating content artifacts without requiring manual user triggers.
+2. **Multi-Provider AI Synthesis**: Integrates **Breeth AI API** (`https://api.breeth.ai/v1/chat/completions`) and **Google GenAI SDK** (`gemini-2.5-flash`) for content creation and virality score prediction.
+3. **Real-Time Milestone Database Streaming**: Continuously streams internal reasoning stages (`[INITIALIZING_CREATOR]`, `[SEARCHING_TRENDS]`, `[ANALYZING_VIRALITY]`, `[SYNTHESIZING_CREATOR_OUTPUT]`, `[COMPLETED]`) into database audit logs.
+4. **Human-in-the-Loop Content Gate & Kill-Switch**: Provides operational safety controls requiring user approval flags before auto-publishing content, with an Emergency Kill-Switch for instant loop interception.
 
 ---
 
 ## 🛠 Technology Stack
 
-* **Backend Engine**: Python 3.14, FastAPI, Uvicorn, AsyncPG, SQLAlchemy 2.0 (Async), PyJWT, Bcrypt, SlowAPI Rate Limiting, Breeth AI API & official Google GenAI SDK (`google-genai`).
-* **Frontend UI**: React 18, Vite 8, Tailwind CSS v4, Lucide Icons, Virtualized Windowed Log Renderer, Server-Sent Events (SSE) Client.
+* **Backend Creator Engine**: Python 3.14, FastAPI, Uvicorn, AsyncPG, SQLAlchemy 2.0 (Async), PyJWT, Bcrypt, SlowAPI Rate Limiting, Breeth AI API & Google GenAI SDK (`google-genai`).
+* **Frontend Dashboard UI**: React 18, Vite 8, Tailwind CSS v4, Lucide Icons, Virtualized Windowed Log Renderer, Server-Sent Events (SSE) EventSource Client.
 * **Database & Concurrency**: PostgreSQL (`asyncpg`) / SQLite (`aiosqlite`) with atomic task locking (`FOR UPDATE SKIP LOCKED`).
 
 ---
@@ -48,12 +62,12 @@ pip install -r requirements.txt
 
 ---
 
-### Step 3: Launch FastAPI Backend Server
+### Step 3: Launch FastAPI Backend Creator Engine Server
 ```bash
 # Set PYTHONPATH and start Uvicorn server on port 8000
 PYTHONPATH=. ./venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-* Backend API base URL: `http://localhost:8000`
+* Backend Creator API URL: `http://localhost:8000`
 * Interactive API Documentation (Swagger): `http://localhost:8000/docs`
 
 > **Default Seeded Admin Credentials**:
@@ -62,7 +76,7 @@ PYTHONPATH=. ./venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ---
 
-### Step 4: Launch React Frontend Dashboard (`/frontend`)
+### Step 4: Launch React Autonomous Creator Dashboard (`/frontend`)
 Open a new terminal window in the project root:
 ```bash
 cd frontend
@@ -73,7 +87,7 @@ npm install
 # Start Vite dev server on port 5173
 npm run dev
 ```
-* Dashboard URL: `http://localhost:5173`
+* Creator Dashboard URL: `http://localhost:5173`
 
 ---
 
@@ -114,7 +128,7 @@ npm run dev
          ├──► Real-Time Server-Sent Events (SSE Channel) ◄───────────────┤
          │                                                               │
          ▼                                                               ▼
-[ Virtualized Console Log ] ◄── Stream Log & Telemetry ── [ Async Worker Engine ]
+[ Virtualized Console Log ] ◄── Stream Log & Telemetry ── [ Async Creator Engine ]
  (~20 Windowed DOM Nodes)                                (4 Parallel Consumer Loops)
                                                                  │
                                                                  ├──► Breeth AI API
@@ -173,4 +187,4 @@ Designed specifically to handle thousands of concurrent users and high traffic v
 
 ## 📜 License
 
-MIT License. Designed for high-throughput, real-time enterprise AI orchestration.
+MIT License. Designed for Track 3: Autonomous AI Creator submission.

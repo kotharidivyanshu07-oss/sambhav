@@ -20,13 +20,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
           <div>
             <div className="flex items-center space-x-2">
               <span className="font-bold text-lg text-white tracking-wide">SAMBHAV</span>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                v1.0.0 CORE
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono">
+                TRACK 3: AUTONOMOUS AI CREATOR
               </span>
             </div>
             <p className="text-xs text-gray-400 font-mono flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
-              FastAPI + React Async Mesh
+              FastAPI + Breeth AI Creator Engine
             </p>
           </div>
         </div>
